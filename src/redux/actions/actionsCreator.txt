@@ -1,0 +1,108 @@
+import axios from 'axios'
+import { triggerAsyncId } from 'async_hooks';
+import productsAndCartActionTypes from "./actionsTypes";
+import Product from '../../interfaces/productIterface';
+import User from '../../interfaces/userInterface';
+import UserLogin from '../../interfaces/userLoginInterface';
+import { AppDispatch } from '../store/store';
+
+const urlMain = 'http://localhost:3100/api'
+
+function loadProducts(): (dispatch: AppDispatch) => Promise<void> {
+    const urlApi = `${urlMain}/products`;
+
+    return async (dispatch: AppDispatch) => {
+        try {
+            const {data} = await axios.get(urlApi)
+            dispatch({
+                type: productsAndCartActionTypes.LOAD_PRODUCTS,
+                products: data
+            })
+
+        } catch (error) {
+            dispatch({
+                type: productsAndCartActionTypes.FAILED_LOAD_PRODUCTS,
+                error
+            })
+        }
+    }
+}
+
+function loadCart(id: string) {
+    const urlApi = `${urlMain}/cart/${id}`
+    const token = JSON.parse(localStorage.getItem('user') || '{}')
+
+    return async (dispatch: AppDispatch) => {
+        try {
+            const {data} = await axios.get(urlApi, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            })
+            dispatch({
+                type: productsAndCartActionTypes.LOAD_CART,
+                carts:  data
+            })
+        } catch (error) {
+            dispatch ({
+                type: productsAndCartActionTypes.FAILED_LOAD_CART,
+                error
+            })
+        }
+    }
+}
+
+function addToCart(idCart: string, product: Product) {
+    const token = JSON.parse(localStorage.getItem('user') || '{}');
+    const urlApi = `${urlMain}/cart/${idCart}/product/${product}0`
+
+    return async (dispatch: AppDispatch) => {
+        try {
+            const {data} = await axios.post(urlApi, {}, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            })
+            dispatch({
+                type: productsAndCartActionTypes.ADD_TO_CART,
+                payload: data
+            })
+        } catch (error) {
+            dispatch({
+                type: productsAndCartActionTypes.FAILED_ADD_TO_CART,
+                error
+                
+            })
+        }
+    }
+}
+
+function deleteOnCart (idCart: string, product : Product) {
+    const token = JSON.parse(localStorage.getItem('user') || '{}')
+    const urlApi = `${urlMain}/cart/${idCart}/product/${product}`
+
+    return async (dispatch: AppDispatch) => {
+        try {
+         let data;
+         await axios.delete(urlApi,  { 
+            headers: {
+               Authorization: `Bearer ${token}`
+            },
+         }).then(() => {
+            data = product
+         })
+
+         dispatch({
+            type: productsAndCartActionTypes.DELETE_CART_PRODUCT,
+            payload: data
+         })
+        } catch (error) {
+            dispatch({
+                type: productsAndCartActionTypes.FAILED_DELETE_CART_PRODUCT,
+                error
+            })
+        }
+    }
+}
+
+export default {loadProducts, loadCart, addToCart, deleteOnCart}

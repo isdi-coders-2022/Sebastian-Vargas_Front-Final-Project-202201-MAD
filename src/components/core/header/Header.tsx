@@ -1,12 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import User from '../user/User';
 
 function Header(): JSX.Element {
     return (
-        <header className="App-header">
-            <Link to="/home">
-                <h1>Chips&Drinks</h1>
-            </Link>
+        <header className="header">
+            <h1>ChipsDrinks</h1>
+            <User/>
         </header>
     );
 }
